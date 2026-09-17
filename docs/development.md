@@ -22,14 +22,37 @@ JDK 21 installation through `JAVA_HOME`.
 
 ## Isolated container runtime
 
+Colima is only needed for the future Jenkins integration suite. Keep it stopped
+while working on compilation and unit tests.
+
+The repository owns the Apple Silicon macOS configuration in
+[`config/colima/colima.yaml`](../config/colima/colima.yaml). It targets Colima
+0.10.3 and macOS 13 or later, using the native virtualization framework.
+Colima reads a named profile's configuration from its own directory and does not
+accept a `--config` file argument. See the
+[Colima configuration documentation](https://colima.run/docs/configuration/).
+
+From the repository root, install the configuration once, with the profile
+stopped. Repeat this copy after intentional repository configuration updates;
+it replaces any local edits to that profile's configuration:
+
 ```sh
-colima start --profile jenkins-platform-library --cpu 2 --memory 4 --disk 30 --runtime docker --activate=false
+mkdir -p "${COLIMA_HOME:-$HOME/.colima}/jenkins-platform-library"
+cp config/colima/colima.yaml "${COLIMA_HOME:-$HOME/.colima}/jenkins-platform-library/colima.yaml"
+```
+
+Start it when container testing is needed:
+
+```sh
+colima start --profile jenkins-platform-library
 docker --context colima-jenkins-platform-library info
 ```
 
 The profile uses 2 CPUs, 4 GiB of memory and a 30 GiB virtual disk. This initial
 allocation verifies tooling; revisit capacity when implementing Jenkins tests.
-Use the named context explicitly rather than changing the user's default.
+`autoActivate: false` preserves the user's default context. Use the named context
+explicitly. Keep VM state outside the repository; copy the configuration rather
+than symlinking it because Colima rewrites its configuration on startup.
 
 ```sh
 colima stop --profile jenkins-platform-library

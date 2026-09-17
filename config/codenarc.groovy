@@ -1,5 +1,7 @@
-// Copyright 2026 Hamid Gholami
-// SPDX-License-Identifier: Apache-2.0
+/**
+ * Copyright 2026 Hamid Gholami
+ * SPDX-License-Identifier: Apache-2.0
+ * */
 
 ruleset {
     description('Typed Groovy and focused correctness checks for a Jenkins shared library')

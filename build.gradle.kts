@@ -1,5 +1,7 @@
-// Copyright 2026 Hamid Gholami
-// SPDX-License-Identifier: Apache-2.0
+/**
+ * Copyright 2026 Hamid Gholami
+ * SPDX-License-Identifier: Apache-2.0
+ * */
 
 import org.gradle.api.artifacts.ComponentMetadataContext
 import org.gradle.api.artifacts.ComponentMetadataRule
@@ -17,7 +19,9 @@ plugins {
 group = "io.github.hamidgholami.jenkins"
 version = "0.1.0-SNAPSHOT"
 
-/** Select companion JARs without replacing POM dependencies or repeating versions. */
+/**
+ * Select companion JARs without replacing POM dependencies or repeating versions.
+ * */
 @CacheableRule
 abstract class JenkinsPluginJarRule : ComponentMetadataRule {
     override fun execute(context: ComponentMetadataContext) {
@@ -96,7 +100,9 @@ dependencyLocking {
 }
 
 tasks.withType<GroovyCompile>().configureEach {
-    // Groovy 2.4 emits Java 8 bytecode; dependencies and execution target JDK 21.
+    /**
+     * Groovy 2.4 emits Java 8 bytecode; dependencies and execution target JDK 21.
+     * */
     sourceCompatibility = "1.8"
     targetCompatibility = "1.8"
     groovyClasspath = libraryCompiler
@@ -141,7 +147,9 @@ codenarc {
     isIgnoreFailures = false
 }
 tasks.withType<CodeNarc>().configureEach {
-    // Analyze syntax without mixing Jenkins's Groovy 2.4 into CodeNarc's runtime.
+    /**
+     * Analyze syntax without mixing Jenkins's Groovy 2.4 into CodeNarc's runtime.
+     * */
     compilationClasspath = files()
     reports {
         html.required = true
@@ -246,6 +254,8 @@ tasks.check {
 }
 
 tasks.jar {
-    // Jenkins consumes source through Git, not a library runtime JAR.
+    /**
+     * Jenkins consumes source through Git, not a library runtime JAR.
+     * */
     enabled = false
 }

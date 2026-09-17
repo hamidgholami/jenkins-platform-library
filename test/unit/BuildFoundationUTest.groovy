@@ -1,5 +1,7 @@
-// Copyright 2026 Hamid Gholami
-// SPDX-License-Identifier: Apache-2.0
+/**
+ * Copyright 2026 Hamid Gholami
+ * SPDX-License-Identifier: Apache-2.0
+ * */
 
 import com.lesfurets.jenkins.unit.BasePipelineTest
 import org.junit.jupiter.api.BeforeEach

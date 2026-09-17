@@ -1,5 +1,7 @@
-// Copyright 2026 Hamid Gholami
-// SPDX-License-Identifier: Apache-2.0
+/**
+ * Copyright 2026 Hamid Gholami
+ * SPDX-License-Identifier: Apache-2.0
+ * */
 
 rootProject.name = "jenkins-platform-library"
 

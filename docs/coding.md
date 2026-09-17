@@ -1,5 +1,32 @@
 # Coding conventions
 
+## Code comments and license headers
+
+Use multiline documentation-style blocks for all project-owned code comments,
+including explanatory comments, inline explanations moved above the relevant
+statement, and license headers. Do not use `//` comments or single-line block
+comments. Apply this convention to new and modified Groovy, Kotlin and Java
+code, including build scripts, configuration scripts, tests and Jenkinsfiles:
+
+```groovy
+/**
+ * Explain the reason for the code here.
+ * */
+```
+
+Use this copyright and SPDX block at the start of project-owned Groovy and
+Kotlin source files, including build scripts and test fixtures:
+
+```groovy
+/**
+ * Copyright 2026 Hamid Gholami
+ * SPDX-License-Identifier: Apache-2.0
+ * */
+```
+
+Use syntax-appropriate comments in other file formats. Preserve upstream
+license notices in generated Gradle Wrapper files.
+
 ## Groovy and Pipeline
 
 - Declare types for fields, locals, return values, parameters and closures.

@@ -18,6 +18,8 @@ from compilation and mock tests alone.
 - Use explicit Groovy types and `final` wherever a value is not reassigned.
   Never use `def`, untyped method parameters or JSON/Slurper round trips for
   object conversion.
+- Use the multiline block format in [coding conventions](docs/coding.md) for all
+  code comments, including explanatory comments and license headers.
 - Keep `vars` stateless and classes focused. Avoid speculative abstractions.
 - Keep versions in the catalog and use the Gradle Wrapper. Preserve the Jenkins
   Groovy baseline independently of Gradle's own runtime.

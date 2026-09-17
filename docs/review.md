@@ -1,6 +1,7 @@
 # Review checklist
 
 - Does the change stay within the approved milestone and solve a concrete need?
+- Do all code comments follow the multiline block convention in the coding guide?
 - Are Groovy types explicit and values final wherever appropriate?
 - Are models mapped explicitly without JSON/Slurper conversion round trips?
 - Are `vars` stateless, CPS boundaries correct and retained objects serializable?

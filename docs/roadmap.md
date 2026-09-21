@@ -4,12 +4,14 @@
 
 Repository foundations, logging and configurable Git checkout with unit tests.
 The utilities use explicit named methods, immutable configuration/results and
-instance-local logging. Real Jenkins compatibility remains unverified.
+instance-local logging. Stage 5 adds a real Jenkins suite and CI; final acceptance
+is still open. See the [session checkpoint](session-checkpoint.md).
 
-## Next planned stages, pending implementation authorization
+## Remaining work
 
-1. Scripted consumers, JCasC fixtures, real Jenkins integration/restart tests and
-   GitHub Actions on PRs and `main`.
+1. Finish stage 5 validation of the implemented consumers, JCasC fixtures,
+   integration/restart tests and GitHub Actions. Then measure and tune Gradle
+   performance; this work is already authorized.
 2. Final compatibility and release review. Configure private security reporting
    and required checks on the remote repository.
 

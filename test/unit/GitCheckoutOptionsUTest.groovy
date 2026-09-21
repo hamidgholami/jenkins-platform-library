@@ -23,7 +23,8 @@ class GitCheckoutOptionsUTest {
     @ParameterizedTest
     @ValueSource(strings = ['https://git.example.org/team/service.git', 'http://git.example.org/team/service.git',
             'ssh://git@git.example.org:2222/team/service.git', 'git@git.example.org:team/service.git',
-            'git://git.example.org/team/service.git', 'ssh://git@[::1]/team/service.git'])
+            'git://git.example.org/team/service.git', 'ssh://git@[::1]/team/service.git',
+            'https://git.example.org:8443/team/my%20service.git'])
     void acceptsNetworkRepositoryForms(final String url) {
         assertEquals(url, GitCheckoutOptions.builder(url).branch('main').build().repositoryUrl)
     }
@@ -34,7 +35,9 @@ class GitCheckoutOptionsUTest {
             'https://git.example.org', 'https://git.example.org/', 'https://git.example.org/repo?token=hidden',
             'https://git.example.org/repo#hidden', 'https://user:hidden@git.example.org/repo',
             'https://hidden@git.example.org/repo', 'ssh://git:hidden@git.example.org/repo',
-            'https://git.example.org/repo\n', 'https://git.example.org/%not-valid', 'https:///repo'])
+            'https://git.example.org/repo\n', 'https://git.example.org/%not-valid', 'https:///repo',
+            'https://git.example.org:bad/repo', 'ssh://git@hidden@git.example.org/repo',
+            'https://git.example.org/<repo>', 'https://git.example.org/repo\\hidden'])
     void rejectsInvalidOrCredentialBearingUrlsWithoutEchoingThem(final String url) {
         final IllegalArgumentException thrown = assertThrows(IllegalArgumentException) { ->
             GitCheckoutOptions.builder(url).branch('main').build()

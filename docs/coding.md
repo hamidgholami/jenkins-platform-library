@@ -49,12 +49,21 @@ license notices in generated Gradle Wrapper files.
 - Helpers that survive suspension must implement `Serializable`; use an explicit
   `serialVersionUID` and keep all reachable state serializable. No mutable static
   state, controller objects, iterators or parser instances across suspension.
+  Store enum names in retained helper state and expose typed getters. Raw Groovy
+  enum values can fail sandboxed initialization during Jenkins deserialization;
+  consumers should pass enum constants inline rather than keep enum locals across
+  a suspension. A Java serialization round trip does not test this behavior.
 - Constructors and `@NonCPS` methods must not call Pipeline steps. Use `@NonCPS`
   only for a justified pure computation; never to silence a serialization error.
 - Do not apply `@CompileStatic` to CPS orchestration. Explicit types improve
   clarity but do not turn dynamic Jenkins steps into statically checked calls.
 - Use Jenkins steps for agent I/O. No direct controller filesystem/process APIs
   and no runtime `@Grab`. Build and test tooling may use local filesystem APIs.
+- Keep library APIs usable as an untrusted library with the standard sandbox
+  permissions. Do not fix integration failures by disabling the sandbox or adding
+  ad hoc script approvals. A future restricted operation needs an explicit design
+  decision, a reviewed minimal permission, reproducible configuration and a real
+  Jenkins test before it becomes a consumer prerequisite.
 - Pass environment-derived values explicitly from consumers to helpers.
 - Preserve exceptions and cancellation. Do not convert aborts into ordinary
   failures, swallow failures or log entire configuration/environment objects.

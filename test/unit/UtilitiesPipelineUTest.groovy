@@ -42,6 +42,11 @@ class UtilitiesPipelineUTest extends BasePipelineTestCPS {
             checkouts.add(arguments)
             return [GIT_COMMIT: '0123456789abcdef0123456789abcdef01234567']
         })
+        helper.registerAllowedMethod('isUnix', [], { -> return true })
+        helper.registerAllowedMethod('sh', [Map], { final Map<String, Object> arguments ->
+            assertEquals('git rev-parse --verify HEAD', arguments.script)
+            return '0123456789abcdef0123456789abcdef01234567\n'
+        })
         helper.registerAllowedMethod('ansiColor', [String, Closure], { final String palette, final Closure body ->
             assertEquals('xterm', palette)
             helper.callClosure(body)

@@ -30,9 +30,18 @@ final class GitHelper implements Serializable {
         logger.info('Checking out repository')
         logger.debug('Clone/fetch timeout: ' + options.cloneTimeoutMinutes +
                 ' min; checkout timeout: ' + options.checkoutTimeoutMinutes + ' min')
-        final Map<String, Object> metadata = (Map<String, Object>) script.checkout(
+        script.checkout(
                 scm: script.scmGit(configuration(options)), poll: options.poll, changelog: options.changelog)
-        final GitCheckoutResult result = GitCheckoutResult.fromCheckout(metadata)
+        /**
+         * Repeated checkouts of one URL can return stale plugin build metadata.
+         * Read the actual agent workspace; the command contains no user input.
+         * */
+        final String commit = script.isUnix()
+                ? script.sh(script: 'git rev-parse --verify HEAD', returnStdout: true).trim()
+                : script.bat(script: '@git rev-parse --verify HEAD', returnStdout: true).trim()
+        final String branch = options.revisionType == GitCheckoutOptions.RevisionType.BRANCH
+                ? options.remoteName + '/' + options.revision : null
+        final GitCheckoutResult result = GitCheckoutResult.fromCheckout([GIT_COMMIT: commit, GIT_BRANCH: branch])
         if (options.revisionType == GitCheckoutOptions.RevisionType.COMMIT &&
                 !options.revision.equalsIgnoreCase(result.commit)) {
             throw new IllegalStateException('Git checkout returned a different commit than requested')

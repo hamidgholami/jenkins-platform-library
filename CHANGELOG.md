@@ -13,4 +13,5 @@
 - Cover utility behavior, validation, failure propagation and serialization with
   JUnit Jupiter and JenkinsPipelineUnit tests.
 
-Real Jenkins integration testing and CI are pending.
+- Add stage 5 Jenkins integration fixtures and a GitHub Actions workflow.
+  Acceptance remains incomplete; see [the session checkpoint](docs/session-checkpoint.md).

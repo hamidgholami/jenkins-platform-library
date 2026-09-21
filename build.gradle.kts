@@ -121,24 +121,22 @@ tasks.withType<Test>().configureEach {
     }
 }
 
-val integrationSuiteReady = tasks.register("integrationSuiteReady") {
-    group = "verification"
-    description = "Reject an empty integration suite until the real Jenkins milestone is implemented."
-    doLast {
-        throw GradleException(
-            "Real Jenkins integration tests are deferred to the consumer-test milestone. " +
-                "Run foundationCheck for the implemented foundation; do not report full check/build as passing.",
-        )
-    }
-}
-
 val integrationTest = tasks.register<Test>("integrationTest") {
-    description = "Run the distinct real Jenkins suite (implementation deferred)."
+    description = "Run disposable Jenkins, agent and Git fixtures, including controller restart."
     group = "verification"
     testClassesDirs = integrationTestSource.output.classesDirs
     classpath = integrationTestSource.runtimeClasspath
-    dependsOn(integrationSuiteReady)
+    dependsOn(tasks.named(integrationTestSource.classesTaskName))
     shouldRunAfter(tasks.test)
+    systemProperty("jpl.projectDir", layout.projectDirectory.asFile.absolutePath)
+    systemProperty("jpl.jenkinsVersion", libs.versions.jenkins.get())
+    systemProperty("jpl.libraryPluginVersion", libs.versions.pipeline.groovy.lib.get())
+    systemProperty("jpl.dockerContext", providers.gradleProperty("dockerContext")
+        .orElse(providers.environmentVariable("DOCKER_CONTEXT")).getOrElse(""))
+    inputs.files(fileTree("src"), fileTree("vars"), fileTree("resources"), fileTree("test/integration-resources"))
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
+    testLogging.showStandardStreams = true
 }
 
 codenarc {
@@ -158,7 +156,10 @@ tasks.withType<CodeNarc>().configureEach {
 }
 
 val pipelineFiles = fileTree("pipelines") { include("**/Jenkinsfile.groovy") }
-val fixturePipelines = fileTree("test/fixtures/pipelines") { include("**/Jenkinsfile.groovy") }
+val fixturePipelines = files(
+    fileTree("test/fixtures/pipelines") { include("**/Jenkinsfile.groovy") },
+    fileTree("test/integration-resources/pipelines") { include("**/*.groovy") },
+)
 val compilePipelines = tasks.register("compilePipelines") {
     group = "verification"
     description = "Compile each consumer and fixture Jenkinsfile into its own output directory."

@@ -34,6 +34,8 @@ class GitCheckoutUTest extends BasePipelineTest {
     private final List<String> messages = []
     private Map<String, Object> checkoutMetadata
     private Exception checkoutFailure
+    private String workspaceCommit
+    private boolean unix
 
     @Override
     @BeforeEach
@@ -44,6 +46,8 @@ class GitCheckoutUTest extends BasePipelineTest {
         checkoutCalls.clear()
         messages.clear()
         checkoutFailure = null
+        workspaceCommit = COMMIT
+        unix = true
         checkoutMetadata = [GIT_COMMIT: COMMIT, GIT_BRANCH: 'origin/main']
         helper.registerAllowedMethod('echo', [String], { final String message -> messages.add(message) })
         helper.registerAllowedMethod('scmGit', [Map], { final Map<String, Object> arguments ->
@@ -57,7 +61,18 @@ class GitCheckoutUTest extends BasePipelineTest {
             }
             return checkoutMetadata
         })
-        for (final String forbidden : ['sh', 'bat', 'git', 'deleteDir', 'retry', 'error']) {
+        helper.registerAllowedMethod('isUnix', [], { -> return unix })
+        helper.registerAllowedMethod('sh', [Map], { final Map<String, Object> arguments ->
+            assertEquals('git rev-parse --verify HEAD', arguments.script)
+            assertEquals(true, arguments.returnStdout)
+            return workspaceCommit + '\n'
+        })
+        helper.registerAllowedMethod('bat', [Map], { final Map<String, Object> arguments ->
+            assertEquals('@git rev-parse --verify HEAD', arguments.script)
+            assertEquals(true, arguments.returnStdout)
+            return workspaceCommit + '\r\n'
+        })
+        for (final String forbidden : ['git', 'deleteDir', 'retry', 'error']) {
             helper.registerAllowedMethod(forbidden, [Map], { final Map<String, Object> ignored ->
                 throw new AssertionError('Unexpected step: ' + forbidden)
             })
@@ -133,8 +148,27 @@ class GitCheckoutUTest extends BasePipelineTest {
         assertEquals(2, checkoutCalls.size())
         assertEquals(scmCalls[0], scmCalls[1])
         assertFalse(helper.callStack.any { final MethodCall call ->
-            return call.methodName in ['sh', 'bat', 'deleteDir', 'retry', 'git']
+            return call.methodName in ['deleteDir', 'retry', 'git']
         })
+    }
+
+    @Test
+    void reportsTheWorkspaceRevisionWhenPluginMetadataIsStale() {
+        checkoutMetadata = [GIT_COMMIT: 'a' * 40, GIT_BRANCH: 'origin/old', GIT_LOCAL_BRANCH: 'old']
+        final GitCheckoutResult result = checkoutScript.checkout(GitCheckoutOptions.builder(URL).branch('main').build())
+        assertEquals(COMMIT, result.commit)
+        assertEquals('origin/main', result.branch)
+        assertNull(result.localBranch)
+    }
+
+    @Test
+    void readsTheWorkspaceOnWindowsWithoutEchoingTheCommand() {
+        unix = false
+        final GitCheckoutResult result = checkoutScript.checkout(GitCheckoutOptions.builder(URL).commit(COMMIT).build())
+        assertEquals(COMMIT, result.commit)
+        assertNull(result.branch)
+        assertTrue(helper.callStack.any { final MethodCall invocation -> return invocation.methodName == 'bat' })
+        assertFalse(helper.callStack.any { final MethodCall invocation -> return invocation.methodName == 'sh' })
     }
 
     @Test
@@ -169,7 +203,7 @@ class GitCheckoutUTest extends BasePipelineTest {
 
     @Test
     void invalidResultDoesNotProduceASuccessMessage() {
-        checkoutMetadata = [:]
+        workspaceCommit = 'not-a-commit'
         assertThrows(IllegalStateException) { ->
             checkoutScript.checkout(GitCheckoutOptions.builder(URL).branch('main').build())
         }

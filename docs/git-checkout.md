@@ -27,8 +27,9 @@ its annotation on a typed import as described in [coding conventions](coding.md)
 Use the default library version configured by the administrator until release
 tags are available. The helper cannot configure retrieval of its own library;
 credentials, version and clone behavior for that retrieval belong in Jenkins
-library configuration/JCasC. A runnable consumer and JCasC fixture are deferred
-to the integration milestone.
+library configuration/JCasC. See the [Scripted checkout example](../pipelines/examples/checkout/Jenkinsfile.groovy)
+and [JCasC test fixture](../test/integration-resources/jenkins/jenkins.yaml).
+The latter is disposable test configuration, not a production deployment template.
 
 ## Configuration
 
@@ -112,8 +113,12 @@ removed. It is opt-in because it can discard workspace content.
 ## Result and logging
 
 The result exposes `commit`, `branch` and `localBranch` as immutable strings.
-Branch values are the plugin's metadata, not inferred from the requested selector;
-either can be null. No environment variables are assigned by this helper.
+`commit` is read from the agent's actual `HEAD` after checkout. Repeated checkouts
+of different revisions of one URL can leave the plugin's returned build metadata
+stale, so the helper does not use it as proof of the workspace revision.
+`branch` is `<remote>/<requested branch>` for branch selection and null for tags
+or commits. Checkout uses detached HEAD, so `localBranch` is null. No environment
+variables are assigned by this helper.
 
 Without a logger, checkout emits plain INFO messages under `GitHelper.checkout`.
 To choose a threshold, context or color, supply a logger from `log.forContext`:
@@ -131,7 +136,7 @@ not dump URLs, credential IDs, option objects or exception text. The Git plugin
 still emits its own diagnostics. Checkout errors and cancellation pass through
 unchanged, with no success log on failure.
 
-The agent needs Git; Jenkins needs the Git, Git Client, Pipeline SCM Step and
+The agent needs the Git CLI on `PATH`; Jenkins needs the Git, Git Client, Pipeline SCM Step and
 Pipeline Groovy Libraries plugins. Configure SSH host verification in Jenkins.
 LFS, submodule controls, sparse checkout and provider-specific PR semantics remain
 on the [roadmap](roadmap.md); this helper does not implement their policies.
@@ -140,5 +145,6 @@ For multibranch PR jobs that rely on the provider's merge strategy, keep using
 
 See the upstream [Git plugin](https://plugins.jenkins.io/git/) and
 [`scmGit` reference](https://www.jenkins.io/doc/pipeline/steps/params/scmgit/).
-Plugin behavior, sandbox execution and restart recovery still require the
-planned real Jenkins integration suite.
+The [integration suite](testing.md) exercises plugin behavior, untrusted-library
+sandbox execution and restart recovery on the [pinned baseline](compatibility.md).
+Windows command selection is unit-tested; the real agent fixture runs Linux.

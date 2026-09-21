@@ -13,7 +13,7 @@ final class PipelineLogger implements Serializable {
 
     private final Script script
     final String context
-    final LogLevel minimumLevel
+    private final String minimumLevelName
     final boolean color
 
     PipelineLogger(final Script script, final String context,
@@ -27,8 +27,21 @@ final class PipelineLogger implements Serializable {
         }
         this.script = script
         this.context = context
-        this.minimumLevel = minimumLevel
+        this.minimumLevelName = minimumLevel.name()
         this.color = color
+    }
+
+    /**
+     * Store a name so Jenkins restores the logger without initializing a Groovy enum.
+     * */
+    @NonCPS
+    LogLevel getMinimumLevel() {
+        for (final LogLevel level : LogLevel.values()) {
+            if (level.name() == minimumLevelName) {
+                return level
+            }
+        }
+        throw new IllegalStateException('Unknown stored log level')
     }
 
     void trace(final String message) {

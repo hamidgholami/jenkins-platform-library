@@ -25,7 +25,7 @@ Each direct dependency is declared once through the catalog.
 
 Keep Jenkins APIs compile-only. Unit tests receive the APIs needed to load
 Pipeline scripts. Compilation dependencies do not install plugins on a running
-controller. A future container suite owns a separate complete runtime plugin lock.
+controller. The container suite owns a separate complete runtime plugin lock.
 
 Strict dependency locks and SHA-256 verification make resolution reviewable.
 `verifyDependencies` checks for unwanted archives, incompatible Groovy modules
@@ -35,9 +35,8 @@ and lost plugin transitives.
 
 Jenkins-compatible Groovy compilation is independent of Gradle and CodeNarc's
 own Groovy versions. JDK 21 is the toolchain; Groovy 2.4 emits Java 8 bytecode.
-Mock tests do not prove CPS correctness. Full `check` must remain blocked until
-the deferred real Jenkins suite exists; `foundationCheck` is this milestone's
-explicit, narrower gate.
+Mock tests do not prove CPS correctness. Full `check` requires the real Jenkins
+suite; `foundationCheck` remains the explicit, narrower gate without Docker.
 
 Sources: [Gradle metadata rules](https://docs.gradle.org/current/userguide/component_metadata_rules.html),
 [Jenkins shared libraries](https://www.jenkins.io/doc/book/pipeline/shared-libraries/).

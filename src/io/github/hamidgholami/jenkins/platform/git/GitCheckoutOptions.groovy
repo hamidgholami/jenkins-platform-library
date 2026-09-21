@@ -11,10 +11,18 @@ final class GitCheckoutOptions implements Serializable {
 
     private static final long serialVersionUID = 1L
 
-    enum RevisionType { BRANCH, TAG, COMMIT }
+    enum RevisionType {
+        BRANCH, TAG, COMMIT
+
+        /**
+         * Avoid Groovy's generated map constructor when loaded in the Jenkins sandbox.
+         * */
+        private RevisionType() {
+        }
+    }
 
     final String repositoryUrl
-    final RevisionType revisionType
+    private final String revisionTypeName
     final String revision
     final String remoteName
     final String credentialsId
@@ -32,7 +40,7 @@ final class GitCheckoutOptions implements Serializable {
 
     private GitCheckoutOptions(final Builder builder) {
         this.repositoryUrl = builder.repositoryUrl
-        this.revisionType = builder.revisionType
+        this.revisionTypeName = builder.revisionTypeName
         this.revision = builder.revision
         this.remoteName = builder.remoteName
         this.credentialsId = builder.credentialsId
@@ -55,6 +63,19 @@ final class GitCheckoutOptions implements Serializable {
     }
 
     /**
+     * Persist plain data; Groovy enum initialization is rejected during sandboxed deserialization.
+     * */
+    @NonCPS
+    RevisionType getRevisionType() {
+        for (final RevisionType type : RevisionType.values()) {
+            if (type.name() == revisionTypeName) {
+                return type
+            }
+        }
+        throw new IllegalStateException('Unknown stored revision type')
+    }
+
+    /**
      * Mutable only while configuring; build creates an independent immutable snapshot.
      * */
     static final class Builder implements Serializable {
@@ -62,7 +83,7 @@ final class GitCheckoutOptions implements Serializable {
         private static final long serialVersionUID = 1L
 
         private final String repositoryUrl
-        private RevisionType revisionType
+        private String revisionTypeName
         private String revision
         private String remoteName = 'origin'
         private String credentialsId
@@ -83,19 +104,19 @@ final class GitCheckoutOptions implements Serializable {
         }
 
         Builder branch(final String name) {
-            this.revisionType = RevisionType.BRANCH
+            this.revisionTypeName = RevisionType.BRANCH.name()
             this.revision = name
             return this
         }
 
         Builder tag(final String name) {
-            this.revisionType = RevisionType.TAG
+            this.revisionTypeName = RevisionType.TAG.name()
             this.revision = name
             return this
         }
 
         Builder commit(final String sha) {
-            this.revisionType = RevisionType.COMMIT
+            this.revisionTypeName = RevisionType.COMMIT.name()
             this.revision = sha
             return this
         }
@@ -168,16 +189,16 @@ final class GitCheckoutOptions implements Serializable {
         @NonCPS
         GitCheckoutOptions build() {
             validateUrl(repositoryUrl)
-            if (revisionType == null || revision == null) {
+            if (revisionTypeName == null || revision == null) {
                 throw new IllegalArgumentException('Select a branch, tag or full commit SHA')
             }
-            if (revisionType == RevisionType.COMMIT) {
+            if (revisionTypeName == RevisionType.COMMIT.name()) {
                 if (!revision.matches('[0-9a-fA-F]{40}')) {
                     throw new IllegalArgumentException('Commit must be a full 40-character hexadecimal SHA')
                 }
             } else {
                 validateRefName(revision)
-                if (revision.startsWith('refs/') || (revisionType == RevisionType.BRANCH && revision == 'HEAD')) {
+                if (revision.startsWith('refs/') || (revisionTypeName == RevisionType.BRANCH.name() && revision == 'HEAD')) {
                     throw new IllegalArgumentException('Use a short branch or tag name, without refs/ prefixes')
                 }
             }
@@ -190,7 +211,7 @@ final class GitCheckoutOptions implements Serializable {
             if (shallowDepth != null && shallowDepth <= 0) {
                 throw new IllegalArgumentException('Shallow depth must be positive; omit it for full history')
             }
-            if (revisionType == RevisionType.TAG && !fetchTags) {
+            if (revisionTypeName == RevisionType.TAG.name() && !fetchTags) {
                 throw new IllegalArgumentException('Tag checkout requires fetchTags to be enabled')
             }
             validateOptionalText(credentialsId, 'Credential ID')
@@ -243,7 +264,8 @@ final class GitCheckoutOptions implements Serializable {
         }
 
         /**
-         * Never retain a parser or include its exception: URL diagnostics can expose credentials.
+         * Validate supported network forms with sandbox-safe strings. Git validates the endpoint.
+         * Never include the supplied URL in diagnostics because it may contain credentials.
          * */
         @NonCPS
         private static void validateUrl(final String value) {
@@ -256,19 +278,25 @@ final class GitCheckoutOptions implements Serializable {
                 }
                 return
             }
-            final URI uri
-            try {
-                uri = new URI(value)
-            } catch (final URISyntaxException ignored) {
+            if (value.matches('(?s).*%(?![0-9a-fA-F]{2}).*') || value.matches('(?s).*[<>"{}|\\\\^`].*')) {
                 throw new IllegalArgumentException('Repository URL is malformed')
             }
-            final String scheme = uri.scheme == null ? '' : uri.scheme.toLowerCase(Locale.ROOT)
-            if (!(scheme in ['http', 'https', 'ssh', 'git']) || uri.host == null ||
-                    uri.path == null || uri.path.length() < 2 || uri.rawQuery != null || uri.rawFragment != null) {
+            final String[] parts = value.split('://', 2)
+            final String scheme = parts[0].toLowerCase(Locale.ROOT)
+            final String[] location = parts[1].split('/', 2)
+            if (!(scheme in ['http', 'https', 'ssh', 'git']) || location.length != 2 ||
+                    location[1].isEmpty() || value.contains('?') || value.contains('#')) {
                 throw new IllegalArgumentException('Use a network Git URL with a host and path, without query or fragment')
             }
-            if (uri.userInfo != null && (scheme != 'ssh' || uri.userInfo.contains(':'))) {
+            final String authority = location[0]
+            final int userSeparator = authority.indexOf('@')
+            if (userSeparator >= 0 && (scheme != 'ssh' ||
+                    !authority.substring(0, userSeparator).matches('[A-Za-z0-9._-]+'))) {
                 throw new IllegalArgumentException('Use a Jenkins credential ID instead of embedded URL credentials')
+            }
+            final String host = authority.substring(userSeparator + 1)
+            if (!host.matches('(?:[A-Za-z0-9][A-Za-z0-9.-]*|\\[[0-9a-fA-F:]+\\])(?::[0-9]+)?')) {
+                throw new IllegalArgumentException('Repository URL must contain a network host and optional numeric port')
             }
         }
     }

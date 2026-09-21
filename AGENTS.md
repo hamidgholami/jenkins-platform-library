@@ -6,11 +6,11 @@ This repository is one Jenkins shared library and one Gradle project. Read
 
 ## Current milestone
 
-Implement logging and configurable Git checkout with unit tests (plan steps 3
-and 4, authorized 2026-09-21). Repository and Gradle foundations are complete.
-Consumer pipelines, real Jenkins integration tests and GitHub Actions remain
-later milestones. Do not claim runtime support from compilation and mock tests
-alone.
+Implement consumer pipelines, JCasC fixtures, real Jenkins integration/restart
+tests and GitHub Actions (plan step 5, authorized 2026-09-21). Then measure and
+tune Gradle performance without weakening verification. Steps 1–4 are complete.
+Do not claim runtime support from compilation and mock tests alone.
+Read [the session checkpoint](docs/session-checkpoint.md) before resuming.
 
 ## Working rules
 
@@ -25,8 +25,9 @@ alone.
 - Keep `vars` stateless and classes focused. Avoid speculative abstractions.
 - Keep versions in the catalog and use the Gradle Wrapper. Preserve the Jenkins
   Groovy baseline independently of Gradle's own runtime.
-- Run `./gradlew foundationCheck` for this milestone. Report that real Jenkins
-  integration testing is deferred; never hide failures with task exclusions in CI.
+- Run `./gradlew foundationCheck` during development and `./gradlew clean build`
+  for full validation once the integration suite is implemented. Never hide
+  failures with task exclusions in CI.
 - Prepare meaningful commit messages and commands with `--signoff` at milestones.
   Never stage, commit, remove files from the Git index or change tracking state.
   The maintainer performs all index and commit operations.

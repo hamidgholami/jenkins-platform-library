@@ -29,16 +29,56 @@ packaged library classes use Gradle's compiled output. Duplicate class preloadin
 is disabled so enum and options arguments keep one class identity. Pipeline
 steps, color and timestamp wrappers remain mocks.
 
-## Deferred integration suite
+## Real Jenkins integration suite
 
-`integrationTest` is registered as a separate JUnit Jupiter suite and required by
-`check`. Until the real suite is implemented, it fails with a clear explanation.
-Consequently `check` and `build` are not release gates that can pass yet. Do not
-replace that failure with an empty passing test or silently skip it.
+`integrationTest` is a separate JUnit Jupiter suite required by `check` and `build`.
+It requires Docker, Git, curl and JDK 21. Missing prerequisites fail the build.
+Use `-PdockerContext=colima-jenkins-platform-library` for the isolated macOS profile.
+Every invocation runs the suite; integration results are never restored from the
+build cache or considered up to date.
 
-The future suite will start pinned Jenkins/JCasC containers and a separate agent,
-load the candidate library through Git, and verify checkout, logging and restart
-behavior. Docker availability is a prerequisite for that suite, not unit tests.
+One disposable environment serves the suite: a digest-pinned Jenkins controller
+with zero executors, a separate inbound agent and an authenticated, read-only Git
+fixture server. JCasC registers an **untrusted** library retrieved using `@Library`;
+consumer scripts run in the sandbox without added script approvals. The runner
+verifies every active plugin version against the complete SHA-256 runtime lock.
+
+The candidate contains the current working-tree `src`, `vars` and `resources`,
+including unstaged changes. Synthetic bare histories are built in temporary
+directories with Git fast-import; the user's repository and index are untouched.
+
+Coverage includes:
+
+- Full history, workspace reuse, opt-in cleaning/pruning, narrow shallow fetch,
+  custom remote names, tags, exact commits, branch names and reference repositories.
+- Credential success/failure, logger filtering and multiline prefixes, rendered
+  ANSI output, timestamps, log-only errors, native failure and `catchError` handling.
+- Helper, logger, options and result objects retained across a controller restart.
+- Native cancellation and rejection of a forbidden controller API in the sandbox.
+
+Reports live in `build/reports/tests/integrationTest` and `build/reports/jenkins`.
+The latter records the candidate revision, plugin manifest and redacted container
+and job logs. Generated credentials are temporary. Cleanup removes only this run's
+containers, network and Jenkins home volume; verified downloads and images remain.
+An abruptly killed local runner may leave labelled resources. Inspect resources
+labelled `jenkins-platform-library.test=true` before removing them, and do not
+remove fixtures while another test run is active.
+
+The fixture is intentionally small: it proves checkout semantics, not throughput
+or timeout suitability for a multi-gigabyte production repository. SSH transport,
+other plugin combinations and provider-specific behavior are not covered.
+
+## Continuous integration
+
+The `Verify` workflow runs `clean build` and a separate history/working-tree secret
+scan for pull requests and pushes to `main`. Actions are pinned, permissions are
+read-only, and reports are retained for seven days. PRs cannot write the Gradle
+cache. The workflow also validates the Wrapper and cleans interrupted fixtures.
+
+After the first successful GitHub run, configure a `main` ruleset requiring PRs
+and the checks **Build and Jenkins integration** and **Secret scan**, with no
+force pushes or branch deletion. This repository supplies the workflow; remote
+ruleset configuration and enforcement require a separate maintainer action.
 
 ## Dependency maintenance
 

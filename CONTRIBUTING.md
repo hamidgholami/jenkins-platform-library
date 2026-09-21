@@ -1,23 +1,18 @@
 # Contributing
 
-Discuss substantial behavior or dependency changes before implementation. Keep
-changes small, independently reviewable and supported by behavior-focused tests.
+Keep changes small and tied to a concrete Jenkins Pipeline use case. Prefer
+standard Jenkins steps and plugin behavior over custom infrastructure or generic
+frameworks.
 
-Read [coding](docs/coding.md), [testing](docs/testing.md) and
-[review guidance](docs/review.md). Run `./gradlew foundationCheck` for the current
-milestone. The real Jenkins suite and GitHub merge gates will be added later.
+Run the verification suite before opening a pull request:
 
-Use descriptive commit messages that explain the resulting behavior. Human
-contributors must sign off contributions using `git commit --signoff` in
-accordance with the [Developer Certificate of Origin](https://developercertificate.org/).
-A DCO sign-off attests the right to contribute; it is not a cryptographic
-signature. Contributors may also use `--gpg-sign` with their configured key.
-Do not introduce a custom CLA.
+```sh
+./gradlew check
+```
 
-Agents prepare commit messages but must not stage, commit or change tracking
-state. The maintainer reviews and performs those operations.
+Add behavior-focused tests for public changes. Use neutral examples and never
+include private endpoints, credentials, company-specific identifiers, or copied
+proprietary code.
 
-Use neutral examples and disposable test data. Never contribute confidential
-code, internal identifiers, endpoints, credentials or copied reference material.
-License contributions under Apache-2.0 and add SPDX headers to substantial
-original source files. Preserve upstream notices in generated tooling.
+Contributions are licensed under Apache-2.0 and require a Developer Certificate
+of Origin sign-off using `git commit --signoff`.

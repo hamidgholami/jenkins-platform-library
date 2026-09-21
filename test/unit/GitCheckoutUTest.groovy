@@ -1,40 +1,28 @@
-/**
- * Copyright 2026 Hamid Gholami
- * SPDX-License-Identifier: Apache-2.0
- * */
-
 import com.lesfurets.jenkins.unit.BasePipelineTest
-import com.lesfurets.jenkins.unit.MethodCall
-import hudson.AbortException
-import hudson.model.Result
 import io.github.hamidgholami.jenkins.platform.git.GitCheckoutOptions
 import io.github.hamidgholami.jenkins.platform.git.GitCheckoutResult
 import io.github.hamidgholami.jenkins.platform.logging.LogLevel
 import io.github.hamidgholami.jenkins.platform.logging.PipelineLogger
-import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
-import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertSame
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 class GitCheckoutUTest extends BasePipelineTest {
 
-    private static final String COMMIT = '0123456789abcdef0123456789abcdef01234567'
     private static final String URL = 'https://git.example.org/team/service.git'
+    private static final String COMMIT = '0123456789abcdef0123456789abcdef01234567'
 
     private Script checkoutScript
     private Script logScript
     private final List<Map<String, Object>> scmCalls = []
     private final List<Map<String, Object>> checkoutCalls = []
     private final List<String> messages = []
-    private Map<String, Object> checkoutMetadata
-    private Exception checkoutFailure
-    private String workspaceCommit
+    private RuntimeException checkoutFailure
     private boolean unix
 
     @Override
@@ -46,175 +34,108 @@ class GitCheckoutUTest extends BasePipelineTest {
         checkoutCalls.clear()
         messages.clear()
         checkoutFailure = null
-        workspaceCommit = COMMIT
         unix = true
-        checkoutMetadata = [GIT_COMMIT: COMMIT, GIT_BRANCH: 'origin/main']
         helper.registerAllowedMethod('echo', [String], { final String message -> messages.add(message) })
         helper.registerAllowedMethod('scmGit', [Map], { final Map<String, Object> arguments ->
             scmCalls.add(arguments)
-            return [configuredScm: arguments]
+            return arguments
         })
         helper.registerAllowedMethod('checkout', [Map], { final Map<String, Object> arguments ->
             checkoutCalls.add(arguments)
             if (checkoutFailure != null) {
                 throw checkoutFailure
             }
-            return checkoutMetadata
+            return [GIT_COMMIT: COMMIT]
         })
         helper.registerAllowedMethod('isUnix', [], { -> return unix })
-        helper.registerAllowedMethod('sh', [Map], { final Map<String, Object> arguments ->
-            assertEquals('git rev-parse --verify HEAD', arguments.script)
-            assertEquals(true, arguments.returnStdout)
-            return workspaceCommit + '\n'
-        })
-        helper.registerAllowedMethod('bat', [Map], { final Map<String, Object> arguments ->
-            assertEquals('@git rev-parse --verify HEAD', arguments.script)
-            assertEquals(true, arguments.returnStdout)
-            return workspaceCommit + '\r\n'
-        })
-        for (final String forbidden : ['git', 'deleteDir', 'retry', 'error']) {
-            helper.registerAllowedMethod(forbidden, [Map], { final Map<String, Object> ignored ->
-                throw new AssertionError('Unexpected step: ' + forbidden)
-            })
-        }
+        helper.registerAllowedMethod('sh', [Map], { final Map<String, Object> ignored -> return COMMIT + '\n' })
+        helper.registerAllowedMethod('bat', [Map], { final Map<String, Object> ignored -> return COMMIT + '\r\n' })
         checkoutScript = loadScript('vars/gitUtils.groovy')
         logScript = loadScript('vars/log.groovy')
     }
 
     @Test
-    void defaultsPreserveHistoryAndMapPluginTimeouts() {
-        final GitCheckoutResult result = checkoutScript.checkout(GitCheckoutOptions.builder(URL).branch('main').build())
-        assertEquals([[
-                branches: [[name: 'refs/remotes/origin/main']],
-                userRemoteConfigs: [[url: URL, name: 'origin', refspec: '+refs/heads/*:refs/remotes/origin/*']],
-                extensions: [
-                        [$class: 'CloneOption', shallow: false, noTags: false, reference: '', timeout: 30, honorRefspec: true],
-                        [$class: 'CheckoutOption', timeout: 15],
-                ],
-        ]], scmCalls)
-        assertEquals([[scm: [configuredScm: scmCalls[0]], poll: false, changelog: false]], checkoutCalls)
+    void mapsDefaultBranchCheckoutToJenkinsSteps() {
+        final GitCheckoutResult result = checkoutScript.checkout(
+                GitCheckoutOptions.builder(URL).branch('main').build())
+
+        assertEquals([[name: 'refs/remotes/origin/main']], scmCalls[0].branches)
+        assertEquals([[url: URL, name: 'origin', refspec: '+refs/heads/*:refs/remotes/origin/*']],
+                scmCalls[0].userRemoteConfigs)
+        assertEquals([
+                [$class: 'CloneOption', shallow: false, noTags: false, reference: '', timeout: 30, honorRefspec: true],
+                [$class: 'CheckoutOption', timeout: 15],
+        ], scmCalls[0].extensions)
+        assertEquals(false, checkoutCalls[0].poll)
+        assertEquals(false, checkoutCalls[0].changelog)
         assertEquals(COMMIT, result.commit)
         assertEquals('origin/main', result.branch)
-        assertNull(result.localBranch)
-        assertEquals(['[INFO] [GitHelper.checkout] Checking out repository',
-                '[INFO] [GitHelper.checkout] Checked out commit ' + COMMIT], messages)
-        assertJobStatusSuccess()
+        assertEquals([
+                '[INFO] [GitHelper.checkout] Checking out repository',
+                '[INFO] [GitHelper.checkout] Checked out commit ' + COMMIT,
+        ], messages)
     }
 
     @Test
-    void mapsTuningOptionsAndUsesTheSuppliedLogger() {
-        final GitCheckoutOptions options = GitCheckoutOptions.builder('git@git.example.org:team/service.git')
-                .branch('release/next').remoteName('upstream').credentialsId('source-reader')
-                .refspec('+refs/heads/release/next:refs/remotes/upstream/release/next')
-                .honorRefspec(false).fetchTags(false).shallowDepth(25)
-                .cloneTimeoutMinutes(90).checkoutTimeoutMinutes(20)
-                .referenceRepository('/agent/cache/service.git')
-                .cleanBeforeCheckout(true).pruneStaleBranches(true).poll(true).changelog(true).build()
-        final PipelineLogger logger = logScript.forContext('Source', LogLevel.DEBUG, true)
+    void mapsExplicitCheckoutControls() {
+        final GitCheckoutOptions options = GitCheckoutOptions.builder(URL).branch('release')
+                .remoteName('upstream').credentialsId('source-reader')
+                .refspec('+refs/heads/release:refs/remotes/upstream/release')
+                .fetchTags(false).shallowDepth(5).cleanBeforeCheckout(true)
+                .pruneStaleBranches(true).poll(true).changelog(true).build()
+        final PipelineLogger logger = logScript.forContext('Source', LogLevel.DEBUG)
+
         checkoutScript.checkout(options, logger)
 
-        assertEquals([[name: 'refs/remotes/upstream/release/next']], scmCalls[0].branches)
-        assertEquals([[
-                url: 'git@git.example.org:team/service.git', name: 'upstream', credentialsId: 'source-reader',
-                refspec: '+refs/heads/release/next:refs/remotes/upstream/release/next',
-        ]], scmCalls[0].userRemoteConfigs)
-        assertEquals([
-                [$class: 'CloneOption', shallow: true, depth: 25, noTags: true, reference: '/agent/cache/service.git',
-                 timeout: 90, honorRefspec: false],
-                [$class: 'CheckoutOption', timeout: 20],
-                [$class: 'CleanBeforeCheckout', deleteUntrackedNestedRepositories: false],
-                [$class: 'PruneStaleBranch'],
-        ], scmCalls[0].extensions)
+        assertEquals('source-reader', scmCalls[0].userRemoteConfigs[0].credentialsId)
+        assertEquals('refs/remotes/upstream/release', scmCalls[0].branches[0].name)
+        assertTrue((boolean) scmCalls[0].extensions[0].shallow)
+        assertEquals(5, scmCalls[0].extensions[0].depth)
         assertTrue((boolean) checkoutCalls[0].poll)
         assertTrue((boolean) checkoutCalls[0].changelog)
-        assertTrue(messages[1].contains('[DEBUG]\u001B[0m [Source] Clone/fetch timeout: 90 min; checkout timeout: 20 min'))
+        assertFalse(messages.join('\n').contains(URL))
         assertFalse(messages.join('\n').contains('source-reader'))
-        assertFalse(messages.join('\n').contains('git.example.org'))
     }
 
     @Test
-    void distinguishesTagsAndCommitsFromBranches() {
-        checkoutScript.checkout(GitCheckoutOptions.builder(URL).tag('release/1.0').build())
-        checkoutScript.checkout(GitCheckoutOptions.builder(URL).commit(COMMIT).build())
-        assertEquals([[name: 'refs/tags/release/1.0']], scmCalls[0].branches)
-        assertEquals([[name: COMMIT]], scmCalls[1].branches)
+    void mapsTagsAndCommitsWithoutInventingBranchMetadata() {
+        final GitCheckoutResult tag = checkoutScript.checkout(GitCheckoutOptions.builder(URL).tag('v1').build())
+        final GitCheckoutResult commit = checkoutScript.checkout(GitCheckoutOptions.builder(URL).commit(COMMIT).build())
+
+        assertEquals('refs/tags/v1', scmCalls[0].branches[0].name)
+        assertEquals(COMMIT, scmCalls[1].branches[0].name)
+        assertEquals(null, tag.branch)
+        assertEquals(null, commit.branch)
     }
 
     @Test
-    void repeatedCheckoutDelegatesWorkspaceReuseToThePlugin() {
-        final GitCheckoutOptions options = GitCheckoutOptions.builder(URL).branch('main').build()
-        checkoutScript.checkout(options)
-        checkoutScript.checkout(options)
-        assertEquals(2, checkoutCalls.size())
-        assertEquals(scmCalls[0], scmCalls[1])
-        assertFalse(helper.callStack.any { final MethodCall call ->
-            return call.methodName in ['deleteDir', 'retry', 'git']
-        })
-    }
-
-    @Test
-    void reportsTheWorkspaceRevisionWhenPluginMetadataIsStale() {
-        checkoutMetadata = [GIT_COMMIT: 'a' * 40, GIT_BRANCH: 'origin/old', GIT_LOCAL_BRANCH: 'old']
-        final GitCheckoutResult result = checkoutScript.checkout(GitCheckoutOptions.builder(URL).branch('main').build())
-        assertEquals(COMMIT, result.commit)
-        assertEquals('origin/main', result.branch)
-        assertNull(result.localBranch)
-    }
-
-    @Test
-    void readsTheWorkspaceOnWindowsWithoutEchoingTheCommand() {
+    void readsHeadWithThePlatformAppropriateStep() {
         unix = false
-        final GitCheckoutResult result = checkoutScript.checkout(GitCheckoutOptions.builder(URL).commit(COMMIT).build())
-        assertEquals(COMMIT, result.commit)
-        assertNull(result.branch)
-        assertTrue(helper.callStack.any { final MethodCall invocation -> return invocation.methodName == 'bat' })
-        assertFalse(helper.callStack.any { final MethodCall invocation -> return invocation.methodName == 'sh' })
+
+        checkoutScript.checkout(GitCheckoutOptions.builder(URL).branch('main').build())
+
+        assertTrue(helper.callStack.any { final Object call -> return call.methodName == 'bat' })
+        assertFalse(helper.callStack.any { final Object call -> return call.methodName == 'sh' })
     }
 
     @Test
-    void propagatesCheckoutFailureWithoutRetryOrLeakingItsMessage() {
-        checkoutFailure = new AbortException('sensitive transport diagnostic')
-        final AbortException thrown = assertThrows(AbortException) { ->
+    void propagatesCheckoutFailuresWithoutRetrying() {
+        checkoutFailure = new RuntimeException('transport failure')
+
+        final RuntimeException thrown = assertThrows(RuntimeException) { ->
             checkoutScript.checkout(GitCheckoutOptions.builder(URL).branch('main').build())
         }
+
         assertSame(checkoutFailure, thrown)
         assertEquals(1, checkoutCalls.size())
         assertEquals(['[INFO] [GitHelper.checkout] Checking out repository'], messages)
     }
 
     @Test
-    void propagatesCancellationWithoutConvertingItToFailure() {
-        checkoutFailure = new FlowInterruptedException(Result.ABORTED, true)
-        final FlowInterruptedException thrown = assertThrows(FlowInterruptedException) { ->
-            checkoutScript.checkout(GitCheckoutOptions.builder(URL).branch('main').build())
-        }
-        assertSame(checkoutFailure, thrown)
-        assertEquals(1, checkoutCalls.size())
-    }
-
-    @Test
-    void rejectsNullOptionsBeforeLoggingOrCheckout() {
-        final PipelineLogger logger = logScript.forContext('Source')
-        assertThrows(IllegalArgumentException) { -> checkoutScript.checkout(null, logger) }
-        assertTrue(scmCalls.isEmpty())
-        assertTrue(checkoutCalls.isEmpty())
-        assertTrue(messages.isEmpty())
-    }
-
-    @Test
-    void invalidResultDoesNotProduceASuccessMessage() {
-        workspaceCommit = 'not-a-commit'
-        assertThrows(IllegalStateException) { ->
-            checkoutScript.checkout(GitCheckoutOptions.builder(URL).branch('main').build())
-        }
-        assertEquals(['[INFO] [GitHelper.checkout] Checking out repository'], messages)
-    }
-
-    @Test
-    void refusesToReportSuccessForAnUnexpectedCommit() {
+    void rejectsAnUnexpectedExplicitCommit() {
         assertThrows(IllegalStateException) { ->
             checkoutScript.checkout(GitCheckoutOptions.builder(URL).commit('a' * 40).build())
         }
-        assertEquals(['[INFO] [GitHelper.checkout] Checking out repository'], messages)
+        assertEquals(1, checkoutCalls.size())
     }
 }

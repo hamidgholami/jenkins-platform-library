@@ -87,15 +87,3 @@ The local validation host is Apple Silicon; the container agent is Linux ARM64.
 Windows command selection has mock coverage only. Large-repository throughput,
 SSH transport and other plugin combinations are not established by this fixture.
 
-## Optional local checkpoint commit
-
-These commands are provided for the maintainer; the agent has not executed them.
-The checkpoint records unfinished work and must not be treated as a passing release.
-
-```sh
-git add AGENTS.md README.md CHANGELOG.md build.gradle.kts docs src test pipelines .github/workflows/verify.yml
-git diff --cached --stat
-git commit --signoff --gpg-sign -m "chore: checkpoint Jenkins integration work" -m "Add isolated Jenkins fixtures and CI; retain restart validation and build performance tuning as open work."
-```
-
-The companion plan is outside this Git repository and was updated separately.

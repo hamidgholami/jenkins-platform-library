@@ -1,18 +1,13 @@
-# Copyright 2026 Hamid Gholami
-# SPDX-License-Identifier: Apache-2.0
-
 [versions]
 groovy = "2.4.21"
-jenkins = "2.568.3"
-pipeline-groovy-lib = "798.v5cc688825312"
+groovy-cps = "4177.vb_203fe395445"
 pipeline-unit = "1.29"
 junit = "6.0.1"
 codenarc = "3.6.0"
 
 [libraries]
 groovy = { module = "org.codehaus.groovy:groovy-all", version.ref = "groovy" }
-jenkins-core = { module = "org.jenkins-ci.main:jenkins-core", version.ref = "jenkins" }
-pipeline-groovy-lib = { module = "io.jenkins.plugins:pipeline-groovy-lib", version.ref = "pipeline-groovy-lib" }
+groovy-cps = { module = "com.cloudbees:groovy-cps", version.ref = "groovy-cps" }
 pipeline-unit = { module = "com.lesfurets:jenkins-pipeline-unit", version.ref = "pipeline-unit" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }

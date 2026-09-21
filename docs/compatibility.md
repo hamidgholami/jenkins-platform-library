@@ -1,7 +1,7 @@
 # Compatibility
 
 These are development targets, not production support claims. No real Jenkins
-consumer suite or release exists in the foundation milestone.
+consumer suite or release exists yet. Logging and checkout are unit-tested only.
 
 | Component | Baseline | Purpose |
 |---|---|---|

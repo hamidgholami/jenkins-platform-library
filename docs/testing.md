@@ -1,6 +1,6 @@
 # Testing
 
-## Current foundation
+## Current foundation and utilities
 
 Run `./gradlew foundationCheck`. It compiles library source, tests and each nested
 consumer Jenkinsfile independently; runs unit tests, CodeNarc and formatting;
@@ -15,6 +15,19 @@ The foundation tests exercise script loading, resource mocking and duplicate
 Jenkinsfile basenames in separate directories. An annotation fixture also checks
 Jenkins's implicit `Library` import during compilation. They do not claim Jenkins CPS,
 sandbox, plugin or restart compatibility.
+
+Utility tests cover logger thresholds, context and color isolation, multiline
+formatting, native error delegation, checkout defaults/tuning, revision selection,
+validation before Pipeline operations, metadata mapping and unchanged exception
+propagation. Serialization round trips check immutable data objects without
+claiming real Jenkins restart coverage.
+
+`UtilitiesPipelineUTest` loads the local library through JenkinsPipelineUnit's
+project retriever and runs a CPS-transformed consumer with typed imports and
+named operations. Its `vars` scripts are compiled through the test loader;
+packaged library classes use Gradle's compiled output. Duplicate class preloading
+is disabled so enum and options arguments keep one class identity. Pipeline
+steps, color and timestamp wrappers remain mocks.
 
 ## Deferred integration suite
 

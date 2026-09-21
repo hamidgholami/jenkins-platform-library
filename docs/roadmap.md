@@ -1,21 +1,17 @@
 # Roadmap
 
-## Current milestone: foundation
+## Completed through the utilities milestone
 
-Repository skeleton, governance, coding rules, local tooling and verified Gradle
-dependency/test wiring. There are no Git or logging production APIs yet.
+Repository foundations, logging and configurable Git checkout with unit tests.
+The utilities use explicit named methods, immutable configuration/results and
+instance-local logging. Real Jenkins compatibility remains unverified.
 
-## Next approved-plan stages, pending implementation authorization
+## Next planned stages, pending implementation authorization
 
-1. Logging: five levels, explicit context and color, log-only `error`, and `fail`
-   delegating to Jenkins's native failure step; unit tests.
-2. Git checkout: typed configuration/results, complete history by default,
-   configurable clone/fetch and checkout timeouts, refspecs, tags, shallow depth,
-   reference repositories and explicit cleanup; unit tests.
-3. Scripted consumers, JCasC fixtures, real Jenkins integration/restart tests and
+1. Scripted consumers, JCasC fixtures, real Jenkins integration/restart tests and
    GitHub Actions on PRs and `main`.
-4. Final compatibility, release and publication review. Enable private security
-   reporting and required checks when the remote repository is created.
+2. Final compatibility and release review. Configure private security reporting
+   and required checks on the remote repository.
 
 ## Required future Git capabilities
 

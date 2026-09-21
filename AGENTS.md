@@ -6,10 +6,11 @@ This repository is one Jenkins shared library and one Gradle project. Read
 
 ## Current milestone
 
-Implement repository and Gradle foundations only. Logging, Git checkout,
-consumer pipelines, real Jenkins integration tests and GitHub Actions are later
-milestones. Do not create placeholder production APIs or claim runtime support
-from compilation and mock tests alone.
+Implement logging and configurable Git checkout with unit tests (plan steps 3
+and 4, authorized 2026-09-21). Repository and Gradle foundations are complete.
+Consumer pipelines, real Jenkins integration tests and GitHub Actions remain
+later milestones. Do not claim runtime support from compilation and mock tests
+alone.
 
 ## Working rules
 
@@ -20,6 +21,7 @@ from compilation and mock tests alone.
   object conversion.
 - Use the multiline block format in [coding conventions](docs/coding.md) for all
   code comments, including explanatory comments and license headers.
+- Use explicit named methods; avoid `call()` APIs under the coding guide rule.
 - Keep `vars` stateless and classes focused. Avoid speculative abstractions.
 - Keep versions in the catalog and use the Gradle Wrapper. Preserve the Jenkins
   Groovy baseline independently of Gradle's own runtime.

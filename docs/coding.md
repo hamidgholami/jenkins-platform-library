@@ -38,6 +38,9 @@ license notices in generated Gradle Wrapper files.
   JSON serialization/deserialization as a map-to-object conversion mechanism.
 - Prefer composition and small focused classes. Avoid generic frameworks,
   placeholder interfaces and constants classes without meaningful constants.
+- Prefer explicit named methods on `vars` scripts and classes. Do not implement
+  `call()` as a convenience API. A rare exception requires no practical alternative
+  and a substantial, documented benefit.
 - `vars` exposes stateless entry points. Packaged classes belong below
   `src/io/github/hamidgholami/jenkins/platform/`. No `@Field` script state.
 - Put `@Library` on a typed import when using library classes. Avoid the untyped
@@ -56,7 +59,7 @@ license notices in generated Gradle Wrapper files.
 - Preserve exceptions and cancellation. Do not convert aborts into ordinary
   failures, swallow failures or log entire configuration/environment objects.
 
-## Logging contract for the next milestone
+## Logging contract
 
 Use five levels: ERROR, WARN, INFO, DEBUG and TRACE, with INFO by default.
 `logger.error(message)` will log only. `logger.fail(message)` will log and call

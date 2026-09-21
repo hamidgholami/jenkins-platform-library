@@ -3,8 +3,12 @@
 An original Jenkins shared library with typed Groovy code, reproducible Gradle
 checks and explicit runtime compatibility targets.
 
-**Status: foundation only.** Git checkout and logging helpers are not implemented
-yet. No released version or production runtime compatibility is claimed.
+**Status: logging and Git checkout implemented with unit tests.** Real Jenkins
+integration, restart validation and CI remain pending. No released version or
+production runtime compatibility is claimed.
+
+- [Logging](docs/logging.md): `log.forContext(...)`, five levels and native failure handling.
+- [Git checkout](docs/git-checkout.md): `gitUtils.checkout(...)`, typed options and configurable clone/fetch behavior.
 
 ## Development
 
@@ -38,7 +42,7 @@ the work available now without presenting an empty integration suite as passing.
 | `test/fixtures/` | Test-only scripts and resources |
 | `test/integration/` | Future real Jenkins consumer suite |
 | `pipelines/` | Nested Scripted consumer Jenkinsfiles, each compiled separately |
-| `config/` | CodeNarc rules |
+| `config/` | CodeNarc rules, compiler configuration and local Colima settings |
 | `docs/` | Decisions, contribution guidance and roadmap |
 
 There is one Gradle project and one shared library. Distribution will use Git

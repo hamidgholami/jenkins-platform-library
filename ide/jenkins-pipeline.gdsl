@@ -1,0 +1,117 @@
+/**
+ * Copyright 2026 Hamid Gholami
+ * SPDX-License-Identifier: Apache-2.0
+ * */
+
+/**
+ * IntelliJ support for the Jenkins Pipeline surface used by this repository.
+ * Plugin-specific steps belong in a controller-generated ide/controller.gdsl.
+ * */
+def pipelineContext = context(scope: scriptScope())
+
+contributor(pipelineContext) {
+    property(name: 'env', type: 'java.util.Map')
+    property(name: 'params', type: 'java.util.Map')
+    property(name: 'currentBuild', type: 'groovy.lang.GroovyObject')
+    property(name: 'scm', type: 'java.lang.Object')
+    property(name: 'gitUtils', type: 'gitUtils')
+    property(name: 'log', type: 'log')
+
+    method(name: 'properties', type: 'java.lang.Object', params: [properties: 'java.util.List'])
+    method(name: 'parameters', type: 'java.lang.Object', params: [definitions: 'java.util.List'])
+    method(name: 'disableConcurrentBuilds', type: 'java.lang.Object', params: [:])
+    method(name: 'disableConcurrentBuilds', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'abortPrevious', type: 'boolean'),
+    ])
+    method(name: 'buildDiscarder', type: 'java.lang.Object', params: [strategy: 'java.lang.Object'])
+    method(name: 'logRotator', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'daysToKeepStr', type: 'java.lang.String'),
+            parameter(name: 'numToKeepStr', type: 'java.lang.String'),
+            parameter(name: 'artifactDaysToKeepStr', type: 'java.lang.String'),
+            parameter(name: 'artifactNumToKeepStr', type: 'java.lang.String'),
+    ])
+    method(name: 'pipelineTriggers', type: 'java.lang.Object', params: [triggers: 'java.util.List'])
+    method(name: 'cron', type: 'java.lang.Object', params: [specification: 'java.lang.String'])
+
+    method(name: 'string', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'name', type: 'java.lang.String'),
+            parameter(name: 'defaultValue', type: 'java.lang.String'),
+            parameter(name: 'description', type: 'java.lang.String'),
+            parameter(name: 'trim', type: 'boolean'),
+    ])
+    method(name: 'booleanParam', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'name', type: 'java.lang.String'),
+            parameter(name: 'defaultValue', type: 'boolean'),
+            parameter(name: 'description', type: 'java.lang.String'),
+    ])
+    method(name: 'choice', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'name', type: 'java.lang.String'),
+            parameter(name: 'choices', type: 'java.util.List'),
+            parameter(name: 'description', type: 'java.lang.String'),
+    ])
+    method(name: 'text', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'name', type: 'java.lang.String'),
+            parameter(name: 'defaultValue', type: 'java.lang.String'),
+            parameter(name: 'description', type: 'java.lang.String'),
+    ])
+    method(name: 'password', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'name', type: 'java.lang.String'),
+            parameter(name: 'defaultValue', type: 'java.lang.String'),
+            parameter(name: 'description', type: 'java.lang.String'),
+    ])
+
+    method(name: 'echo', type: 'java.lang.Object', params: [message: 'java.lang.String'])
+    method(name: 'error', type: 'java.lang.Object', params: [message: 'java.lang.String'])
+    method(name: 'node', type: 'java.lang.Object', params: [label: 'java.lang.String', body: 'groovy.lang.Closure'])
+    method(name: 'stage', type: 'java.lang.Object', params: [name: 'java.lang.String', body: 'groovy.lang.Closure'])
+    method(name: 'dir', type: 'java.lang.Object', params: [path: 'java.lang.String', body: 'groovy.lang.Closure'])
+    method(name: 'timestamps', type: 'java.lang.Object', params: [body: 'groovy.lang.Closure'])
+    method(name: 'ansiColor', type: 'java.lang.Object',
+            params: [colorMapName: 'java.lang.String', body: 'groovy.lang.Closure'])
+    method(name: 'withCredentials', type: 'java.lang.Object',
+            params: [bindings: 'java.util.List', body: 'groovy.lang.Closure'])
+    method(name: 'withEnv', type: 'java.lang.Object',
+            params: [overrides: 'java.util.List', body: 'groovy.lang.Closure'])
+    method(name: 'timeout', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'time', type: 'int'),
+            parameter(name: 'unit', type: 'java.lang.String'),
+            parameter(name: 'activity', type: 'boolean'),
+    ], params: [body: 'groovy.lang.Closure'])
+    method(name: 'retry', type: 'java.lang.Object', params: [count: 'int', body: 'groovy.lang.Closure'])
+
+    method(name: 'sh', type: 'java.lang.Object', params: [script: 'java.lang.String'])
+    method(name: 'sh', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'script', type: 'java.lang.String'),
+            parameter(name: 'returnStatus', type: 'boolean'),
+            parameter(name: 'returnStdout', type: 'boolean'),
+            parameter(name: 'encoding', type: 'java.lang.String'),
+            parameter(name: 'label', type: 'java.lang.String'),
+    ])
+    method(name: 'bat', type: 'java.lang.Object', params: [script: 'java.lang.String'])
+    method(name: 'checkout', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'scm', type: 'java.lang.Object'),
+            parameter(name: 'poll', type: 'boolean'),
+            parameter(name: 'changelog', type: 'boolean'),
+    ])
+    method(name: 'scmGit', type: 'java.lang.Object', params: [configuration: 'java.util.Map'])
+
+    method(name: 'string', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'credentialsId', type: 'java.lang.String'),
+            parameter(name: 'variable', type: 'java.lang.String'),
+    ])
+    method(name: 'usernamePassword', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'credentialsId', type: 'java.lang.String'),
+            parameter(name: 'usernameVariable', type: 'java.lang.String'),
+            parameter(name: 'passwordVariable', type: 'java.lang.String'),
+    ])
+    method(name: 'file', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'credentialsId', type: 'java.lang.String'),
+            parameter(name: 'variable', type: 'java.lang.String'),
+    ])
+    method(name: 'sshUserPrivateKey', type: 'java.lang.Object', namedParams: [
+            parameter(name: 'credentialsId', type: 'java.lang.String'),
+            parameter(name: 'keyFileVariable', type: 'java.lang.String'),
+            parameter(name: 'passphraseVariable', type: 'java.lang.String'),
+            parameter(name: 'usernameVariable', type: 'java.lang.String'),
+    ])
+}

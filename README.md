@@ -18,10 +18,12 @@ Configure this repository as a Jenkins Shared Library named
 `jenkins-platform-library`, then load it from a Pipeline:
 
 ```groovy
-@Library('jenkins-platform-library')
 import io.github.hamidgholami.jenkins.platform.git.GitCheckoutOptions
 import io.github.hamidgholami.jenkins.platform.git.GitCheckoutResult
 import io.github.hamidgholami.jenkins.platform.logging.PipelineLogger
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-platform-library') _
 
 final PipelineLogger logger = log.forContext('Source')
 final GitCheckoutOptions options = GitCheckoutOptions
@@ -47,7 +49,8 @@ See [logging](docs/logging.md), [Git checkout](docs/git-checkout.md), the
 | `src/` | Packaged Groovy implementation |
 | `vars/` | Public Jenkins Pipeline entry points |
 | `test/unit/` | Unit tests |
-| `pipelines/` | Example consumers |
+| `pipelines/` | Example pipeline projects; one `Jenkinsfile.groovy` per leaf directory |
+| `ide/` | IntelliJ Jenkins Pipeline DSL support |
 
 ## Development
 

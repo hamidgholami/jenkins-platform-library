@@ -1,5 +1,11 @@
 # Pipeline conventions
 
+Pipeline projects live below `pipelines/`. Nested directories may describe the
+domain and purpose, but every leaf project contains exactly one
+`Jenkinsfile.groovy`. Gradle exposes each leaf directory as a separate IntelliJ
+source root, so Jenkinsfiles remain package-free scripts without false package
+warnings.
+
 Example Jenkinsfiles use the explicit standalone Shared Library annotation:
 
 ```groovy
@@ -47,3 +53,16 @@ Keep this control flow visible in the Jenkinsfile. A Shared Library method can
 apply properties and return a decision, but it cannot return from the calling
 Jenkinsfile; wrapping these few lines would therefore add indirection without
 removing the pipeline-level guard.
+
+## IntelliJ Pipeline DSL
+
+The checked-in `ide/jenkins-pipeline.gdsl` describes the Jenkins globals and
+common steps used by this repository, including `params`, `env`, `properties`,
+`node`, `stage`, `sh`, and `withCredentials`. It exists only for navigation and
+completion; Jenkins remains the runtime authority.
+
+Pipeline steps contributed by plugins depend on the plugins installed on a
+particular Jenkins controller. For completion beyond the repository baseline,
+download that controller's generated `pipeline-syntax/gdsl` file as
+`ide/controller.gdsl`. This local file is ignored because it describes one
+controller rather than the portable project.

@@ -51,9 +51,13 @@ tasks.withType<Test>().configureEach {
     }
 }
 
+val pipelineSourceDirectories = fileTree("pipelines") {
+    include("**/Jenkinsfile.groovy")
+}.files.map { it.parentFile }.toSet()
+
 idea {
     module {
-        sourceDirs = sourceDirs + setOf(file("pipelines"), file("config"))
+        sourceDirs = sourceDirs + pipelineSourceDirectories + setOf(file("config"), file("ide"))
     }
 }
 
@@ -67,8 +71,9 @@ val formatCheck = tasks.register("formatCheck") {
     group = "verification"
     description = "Check whitespace and final newlines."
     val textFiles = fileTree(projectDir) {
-        include("**/*.md", "**/*.groovy", "**/*.kts", "**/*.toml", "**/*.yml", "**/*.yaml", "**/*.properties")
-        exclude(".git/**", ".gradle/**", "build/**", "gradle/wrapper/**")
+        include("**/*.md", "**/*.groovy", "**/*.gdsl", "**/*.kts", "**/*.toml",
+                "**/*.yml", "**/*.yaml", "**/*.properties")
+        exclude(".git/**", ".gradle/**", "build/**", "gradle/wrapper/**", "ide/controller.gdsl")
     }
     inputs.files(textFiles)
     doLast {

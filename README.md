@@ -49,6 +49,7 @@ See [logging](docs/logging.md), [Git checkout](docs/git-checkout.md), the
 | `src/` | Packaged Groovy implementation |
 | `vars/` | Public Jenkins Pipeline entry points |
 | `test/unit/` | Unit tests |
+| `test/integration/` | Focused embedded-Jenkins tests |
 | `pipelines/` | Example pipeline projects; one `Jenkinsfile.groovy` per leaf directory |
 | `ide/` | IntelliJ Jenkins Pipeline DSL support |
 
@@ -58,16 +59,26 @@ Use JDK 21 and the checked-in Gradle Wrapper:
 
 ```sh
 ./gradlew check
+./gradlew integrationTest
 ```
 
 The build compiles the library, runs CodeNarc and formatting checks, and executes
-the unit suite. It does not require Docker or a local Jenkins controller. The
-[testing strategy](docs/testing-strategy.md) records the planned path toward
-focused Jenkins Test Harness coverage and later validation on a test controller.
+the unit suite. The separate `integrationTest` task starts an embedded Jenkins
+controller and runs focused sandbox and Git-plugin checks. Neither task requires
+Docker or an externally managed Jenkins controller. The Git integration test
+requires the standard `git` command with `git daemon` support. See the
+[testing strategy](docs/testing-strategy.md) for the boundaries of each layer.
 
 This project targets Jenkins environments compatible with Groovy 2.4 and the
 Pipeline and Git plugins. Consumers should validate the library against their
 own Jenkins and plugin versions before production use.
+
+## Versioning
+
+Releases use semantic Git tags such as `v0.1.0`; the `main` branch represents
+ongoing development. Jenkins consumers should pin a reviewed release with
+`@Library('jenkins-platform-library@v0.1.0') _`. The project is loaded from SCM
+and does not publish a Maven artifact.
 
 ## License
 

@@ -5,6 +5,9 @@ pipeline-groovy-lib = "798.v5cc688825312"
 pipeline-unit = "1.29"
 junit = "6.0.1"
 codenarc = "3.6.0"
+jenkins = "2.568.3"
+jenkins-bom = "7046.v43536164769c"
+jenkins-test-harness = "2582.v92781333ea_78"
 
 [libraries]
 groovy = { module = "org.codehaus.groovy:groovy-all", version.ref = "groovy" }
@@ -14,3 +17,7 @@ junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 codenarc = { module = "org.codenarc:CodeNarc", version.ref = "codenarc" }
+jenkins-bom = { module = "io.jenkins.tools.bom:bom-2.568.x", version.ref = "jenkins-bom" }
+jenkins-core = { module = "org.jenkins-ci.main:jenkins-core", version.ref = "jenkins" }
+jenkins-test-harness = { module = "org.jenkins-ci.main:jenkins-test-harness", version.ref = "jenkins-test-harness" }
+jenkins-war = { module = "org.jenkins-ci.main:jenkins-war", version.ref = "jenkins" }

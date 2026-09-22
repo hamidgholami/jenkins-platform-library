@@ -11,17 +11,6 @@ dependencyResolutionManagement {
         mavenCentral()
         maven("https://repo.jenkins-ci.org/public/") {
             name = "Jenkins"
-            content {
-                includeGroupByRegex("org\\.jenkins-ci(\\..*)?")
-                includeGroupByRegex("io\\.jenkins(\\..*)?")
-                includeGroup("com.cloudbees")
-                includeGroup("com.lesfurets")
-                includeGroup("org.kohsuke.stapler")
-                includeGroup("org.kohsuke")
-                includeGroup("org.jvnet")
-                includeGroup("org.jvnet.hudson")
-                includeGroup("org.jvnet.winp")
-            }
         }
     }
 }

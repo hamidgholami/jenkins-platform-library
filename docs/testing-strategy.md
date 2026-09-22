@@ -5,9 +5,8 @@
 The repository uses multiple test layers because no single Jenkins testing tool
 provides both fast feedback and complete runtime confidence.
 
-The current unit suite is intentionally the only required test layer. A small
-real-Jenkins integration suite is planned to cover behavior that mocks cannot
-establish.
+The unit suite remains the fast required test layer. A separate, focused
+real-Jenkins integration suite covers behavior that mocks cannot establish.
 
 ## Test layers
 
@@ -26,14 +25,14 @@ real plugin behavior.
 
 ### Embedded Jenkins integration tests
 
-The next testing milestone is an optional `integrationTest` suite running
-representative consumers with Jenkins Test Harness.
+The optional `integrationTest` suite runs representative consumers with Jenkins
+Test Harness.
 
-Start with no more than two scenarios:
+It contains two scenarios:
 
 1. Load the working-tree library and exercise logging from a sandboxed Pipeline.
-2. Exercise `gitUtils.checkout` with the real Git plugin and a temporary local
-   bare repository.
+2. Exercise `gitUtils.checkout` with the real Git plugin and a temporary bare
+   repository exposed on loopback by the standard `git daemon` command.
 
 This layer should verify:
 
@@ -55,32 +54,26 @@ outside the repository's local test infrastructure.
 
 ## Tooling decision
 
-Evaluate the mkobit Jenkins Shared Library Gradle plugin before wiring Jenkins
-Test Harness directly. The plugin currently provides the source-set, Jenkins
-WAR, plugin dependency, BOM, and local-library registration conventions that are
-otherwise expensive to maintain by hand.
+Use Jenkins Test Harness directly. A compatibility spike with mkobit plugin
+0.12.1, Gradle 9.7.1, Java 21, and Jenkins 2.568.3 failed during Groovy
+compilation because the plugin changed a finalized Gradle task property. Keeping
+the current Gradle version is more valuable than delegating this small test layer
+to a third-party build plugin.
 
-Adopt it only if a short compatibility spike proves that:
+The direct configuration keeps Jenkins core, BOM, Test Harness, WAR, and plugin
+dependencies explicit. Integration tests use standard `JenkinsRule` APIs and a
+small test-only retriever for the working-tree library. Reconsider the mkobit
+plugin only after a release explicitly supports the repository's current Gradle
+version and passes the same compatibility spike.
 
-- it works with the repository's current Gradle and JDK versions;
-- Jenkins and plugin versions remain explicit and reviewable;
-- production source code remains independent of the plugin;
-- the integration tests are understandable without plugin internals;
-- the suite has acceptable runtime and memory use;
-- removing or replacing the plugin later would not require rewriting tests from
-  first principles.
-
-If those conditions are not met, use Jenkins Test Harness directly with the
-smallest explicit dependency and task configuration possible. Jenkinsfile Runner
-may be evaluated later for complete Jenkinsfile smoke tests, but it is not the
-first choice for library-level integration assertions.
+Jenkinsfile Runner may be evaluated later for complete Jenkinsfile smoke tests,
+but it is not the first choice for library-level integration assertions.
 
 ## CI adoption
 
-Introduce `integrationTest` as a manually triggered or non-blocking CI job.
-Promote it into the required `check` lifecycle only after it is reliable, has a
-measured maintenance cost, and demonstrates that it catches failures the unit
-suite cannot.
+Keep `integrationTest` manually triggered or non-blocking in CI initially.
+Promote it into the required `check` lifecycle only after it remains reliable
+and its measured maintenance cost is acceptable.
 
 Add expensive scenarios only in response to concrete requirements:
 

@@ -76,9 +76,11 @@ but it is not the first choice for library-level integration assertions.
 
 ## CI adoption
 
-Keep `integrationTest` manually triggered or non-blocking in CI initially.
-Promote it into the required `check` lifecycle only after it remains reliable
-and its measured maintenance cost is acceptable.
+Pull requests and pushes to `main` run the fast `check` lifecycle. Version tags
+matching `v*` additionally run `integrationTest` and print the Pipeline console
+logs. A release tag therefore verifies the exact revision that Jenkins
+consumers will load, without imposing the embedded-controller cost on every
+change.
 
 Add expensive scenarios only in response to concrete requirements:
 

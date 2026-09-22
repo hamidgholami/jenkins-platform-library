@@ -16,6 +16,7 @@ class GitCheckoutUTest extends BasePipelineTest {
 
     private static final String URL = 'https://git.example.org/team/service.git'
     private static final String COMMIT = '0123456789abcdef0123456789abcdef01234567'
+    private static final String IDENTITIES = 'Ada Author\nada@example.org\nCasey Committer\ncasey@example.org\n'
 
     private Script checkoutScript
     private Script logScript
@@ -48,8 +49,12 @@ class GitCheckoutUTest extends BasePipelineTest {
             return [GIT_COMMIT: COMMIT]
         })
         helper.registerAllowedMethod('isUnix', [], { -> return unix })
-        helper.registerAllowedMethod('sh', [Map], { final Map<String, Object> ignored -> return COMMIT + '\n' })
-        helper.registerAllowedMethod('bat', [Map], { final Map<String, Object> ignored -> return COMMIT + '\r\n' })
+        helper.registerAllowedMethod('sh', [Map], { final Map<String, Object> arguments ->
+            return arguments.script.contains('git show') ? IDENTITIES : COMMIT + '\n'
+        })
+        helper.registerAllowedMethod('bat', [Map], { final Map<String, Object> arguments ->
+            return arguments.script.contains('git show') ? IDENTITIES.replace('\n', '\r\n') : COMMIT + '\r\n'
+        })
         checkoutScript = loadScript('vars/gitUtils.groovy')
         logScript = loadScript('vars/log.groovy')
     }
@@ -70,6 +75,10 @@ class GitCheckoutUTest extends BasePipelineTest {
         assertEquals(false, checkoutCalls[0].changelog)
         assertEquals(COMMIT, result.commit)
         assertEquals('origin/main', result.branch)
+        assertEquals('Ada Author', result.authorName)
+        assertEquals('ada@example.org', result.authorEmail)
+        assertEquals('Casey Committer', result.committerName)
+        assertEquals('casey@example.org', result.committerEmail)
         assertEquals([
                 '[INFO] [GitHelper.checkout] Checking out repository',
                 '[INFO] [GitHelper.checkout] Checked out commit ' + COMMIT,

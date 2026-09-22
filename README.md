@@ -36,7 +36,8 @@ node('linux') {
 }
 ```
 
-See [logging](docs/logging.md), [Git checkout](docs/git-checkout.md), and the
+See [logging](docs/logging.md), [Git checkout](docs/git-checkout.md), the
+[pipeline conventions](docs/pipeline-conventions.md), and the
 [complete example](pipelines/examples/checkout/Jenkinsfile.groovy).
 
 ## Project structure

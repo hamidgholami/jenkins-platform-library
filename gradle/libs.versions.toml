@@ -1,6 +1,7 @@
 [versions]
 groovy = "2.4.21"
 groovy-cps = "4177.vb_203fe395445"
+pipeline-groovy-lib = "798.v5cc688825312"
 pipeline-unit = "1.29"
 junit = "6.0.1"
 codenarc = "3.6.0"

@@ -39,9 +39,13 @@ final class GitHelper implements Serializable {
         final String commit = script.isUnix()
                 ? script.sh(script: 'git rev-parse --verify HEAD', returnStdout: true).trim()
                 : script.bat(script: '@git rev-parse --verify HEAD', returnStdout: true).trim()
+        final String identityOutput = script.isUnix()
+                ? script.sh(script: 'git show -s --format=%aN%n%aE%n%cN%n%cE HEAD', returnStdout: true)
+                : script.bat(script: '@git show -s --format=%aN%n%aE%n%cN%n%cE HEAD', returnStdout: true)
         final String branch = options.revisionType == GitCheckoutOptions.RevisionType.BRANCH
                 ? options.remoteName + '/' + options.revision : null
-        final GitCheckoutResult result = GitCheckoutResult.fromCheckout([GIT_COMMIT: commit, GIT_BRANCH: branch])
+        final GitCheckoutResult result = GitCheckoutResult.fromCheckout(
+                [GIT_COMMIT: commit, GIT_BRANCH: branch], identityOutput)
         if (options.revisionType == GitCheckoutOptions.RevisionType.COMMIT &&
                 !options.revision.equalsIgnoreCase(result.commit)) {
             throw new IllegalStateException('Git checkout returned a different commit than requested')

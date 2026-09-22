@@ -43,9 +43,12 @@ The helper delegates cloning and checkout to Jenkins's `scmGit` and `checkout`
 steps. It adds no retries and never deletes the workspace. Checkout failures and
 Pipeline interruptions propagate to the caller unchanged.
 
-The returned result contains the checked-out commit and available branch
-metadata. The commit is read from the workspace's actual `HEAD`, avoiding stale
-metadata after repeated checkouts.
+The returned result contains the checked-out commit, available branch metadata,
+and the author and committer name and email address for `HEAD`. Git mailmap
+entries are respected. The author normally identifies the person who created
+the change; the committer may instead be a merge service or automation account.
+The commit and identities are read from the workspace's actual `HEAD`, avoiding
+stale metadata after repeated checkouts.
 
 Repository credentials belong in Jenkins. Do not embed passwords or tokens in
 repository URLs or log complete checkout configurations.

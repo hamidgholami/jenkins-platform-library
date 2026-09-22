@@ -75,17 +75,24 @@ class GitCheckoutOptionsUTest {
                 GIT_LOCAL_BRANCH: 'main',
         ]
 
-        final GitCheckoutResult result = GitCheckoutResult.fromCheckout(metadata)
+        final GitCheckoutResult result = GitCheckoutResult.fromCheckout(
+                metadata, 'Ada Author\nada@example.org\nCasey Committer\ncasey@example.org\n')
         metadata.clear()
 
         assertEquals(COMMIT, result.commit)
         assertEquals('origin/main', result.branch)
         assertEquals('main', result.localBranch)
+        assertEquals('Ada Author', result.authorName)
+        assertEquals('ada@example.org', result.authorEmail)
+        assertEquals('Casey Committer', result.committerName)
+        assertEquals('casey@example.org', result.committerEmail)
     }
 
     @Test
     void requiresAFullCommitInCheckoutMetadata() {
-        assertThrows(IllegalStateException) { -> GitCheckoutResult.fromCheckout(null) }
-        assertThrows(IllegalStateException) { -> GitCheckoutResult.fromCheckout([GIT_COMMIT: '123abc']) }
+        assertThrows(IllegalStateException) { -> GitCheckoutResult.fromCheckout(null, null) }
+        assertThrows(IllegalStateException) { -> GitCheckoutResult.fromCheckout([GIT_COMMIT: '123abc'], null) }
+        assertThrows(IllegalStateException) { -> GitCheckoutResult.fromCheckout(
+                [GIT_COMMIT: COMMIT], 'Incomplete\nidentity\n') }
     }
 }

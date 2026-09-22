@@ -1,6 +1,7 @@
 plugins {
     groovy
     codenarc
+    idea
 }
 
 group = "io.github.hamidgholami.jenkins"
@@ -25,6 +26,9 @@ sourceSets {
 dependencies {
     implementation(libs.groovy)
     compileOnly(libs.groovy.cps)
+    compileOnly("io.jenkins.plugins:pipeline-groovy-lib:${libs.versions.pipeline.groovy.lib.get()}@jar") {
+        isTransitive = false
+    }
     testImplementation(libs.pipeline.unit)
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
@@ -42,8 +46,14 @@ tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     maxParallelForks = 1
     testLogging {
-        events("failed", "skipped")
+        events("passed", "failed", "skipped")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+}
+
+idea {
+    module {
+        sourceDirs = sourceDirs + setOf(file("pipelines"), file("config"))
     }
 }
 

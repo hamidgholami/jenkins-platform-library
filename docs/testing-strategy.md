@@ -28,6 +28,11 @@ real plugin behavior.
 The optional `integrationTest` suite runs representative consumers with Jenkins
 Test Harness.
 
+Run it with `./gradlew integrationTest`. Add
+`-PshowIntegrationLogs=true --console=plain` to print the successful Pipeline
+console logs without enabling Gradle's verbose `--info` output. The logs are
+also retained in `build/reports/jenkins-console/` for inspection.
+
 It contains two scenarios:
 
 1. Load the working-tree library and exercise logging from a sandboxed Pipeline.

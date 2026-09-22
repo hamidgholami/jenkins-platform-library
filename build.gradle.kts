@@ -131,6 +131,11 @@ tasks.check {
 }
 
 val jenkinsTestDependencies = layout.buildDirectory.dir("jenkins-test-classpath")
+val jenkinsConsoleLogs = layout.buildDirectory.dir("reports/jenkins-console")
+val showIntegrationLogs = providers.gradleProperty("showIntegrationLogs")
+        .map(String::toBoolean)
+        .orElse(false)
+
 val prepareJenkinsTestDependencies = tasks.register<Sync>("prepareJenkinsTestDependencies") {
     group = "verification"
     description = "Prepare Jenkins plugins for the embedded controller."
@@ -181,10 +186,29 @@ val integrationTest = tasks.register<Test>("integrationTest") {
     dependsOn(prepareJenkinsTestDependencies, extractJenkinsPluginJars)
     shouldRunAfter(tasks.test)
     maxHeapSize = "2g"
+    outputs.dir(jenkinsConsoleLogs)
+    outputs.upToDateWhen { !showIntegrationLogs.get() }
     doFirst {
+        val consoleLogDirectory = jenkinsConsoleLogs.get().asFile
+        consoleLogDirectory.deleteRecursively()
+        consoleLogDirectory.mkdirs()
         systemProperty("buildDirectory", layout.buildDirectory.get().asFile.absolutePath)
         systemProperty("jth.jenkins-war.path", jenkinsWar.singleFile.absolutePath)
         systemProperty("jenkins.library.root", projectDir.absolutePath)
+        systemProperty("jenkins.console.logs", consoleLogDirectory.absolutePath)
+    }
+    doLast {
+        if (showIntegrationLogs.get()) {
+            jenkinsConsoleLogs.get().asFile.listFiles().orEmpty()
+                    .filter { it.extension == "log" }
+                    .sortedBy { it.name }
+                    .forEach { consoleLog ->
+                        logger.lifecycle(
+                                "\n--- Jenkins console: ${consoleLog.nameWithoutExtension} ---\n" +
+                                        consoleLog.readText().trimEnd(),
+                        )
+                    }
+        }
     }
     jvmArgs(
             "-XX:+ExitOnOutOfMemoryError",

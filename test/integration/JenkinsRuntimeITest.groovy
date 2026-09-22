@@ -73,7 +73,10 @@ class JenkinsRuntimeITest {
     private static WorkflowRun runPipeline(final JenkinsRule jenkins, final String name, final String script) {
         final WorkflowJob job = jenkins.createProject(WorkflowJob, name)
         job.definition = new CpsFlowDefinition(script, true)
-        return jenkins.buildAndAssertSuccess(job)
+        final WorkflowRun run = jenkins.buildAndAssertSuccess(job)
+        final File consoleLogDirectory = new File(System.getProperty('jenkins.console.logs'))
+        Files.writeString(consoleLogDirectory.toPath().resolve(name + '.log'), JenkinsRule.getLog(run))
+        return run
     }
 
     private static void registerLibrary() {

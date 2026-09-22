@@ -60,6 +60,7 @@ Use JDK 21 and the checked-in Gradle Wrapper:
 ```sh
 ./gradlew check
 ./gradlew integrationTest
+./gradlew integrationTest -PshowIntegrationLogs=true --console=plain
 ```
 
 The build compiles the library, runs CodeNarc and formatting checks, and executes
@@ -68,6 +69,13 @@ controller and runs focused sandbox and Git-plugin checks. Neither task requires
 Docker or an externally managed Jenkins controller. The Git integration test
 requires the standard `git` command with `git daemon` support. See the
 [testing strategy](docs/testing-strategy.md) for the boundaries of each layer.
+
+The final command prints only the Pipeline console output for each integration
+scenario. Jenkins console logs are also saved under
+`build/reports/jenkins-console/`. In IntelliJ IDEA, create a Gradle run
+configuration for the `integrationTest` task and add
+`-PshowIntegrationLogs=true --console=plain` as arguments. Keep **Run tests
+using** set to **Gradle** so the required Jenkins Test Harness setup runs.
 
 This project targets Jenkins environments compatible with Groovy 2.4 and the
 Pipeline and Git plugins. Consumers should validate the library against their

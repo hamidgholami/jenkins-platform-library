@@ -35,8 +35,9 @@ val jenkinsWar = configurations.create("jenkinsWar") {
 dependencies {
     implementation(libs.groovy)
     compileOnly(libs.groovy.cps)
-    compileOnly("io.jenkins.plugins:pipeline-groovy-lib:${libs.versions.pipeline.groovy.lib.get()}@jar") {
+    compileOnly(libs.pipeline.groovy.lib) {
         isTransitive = false
+        artifact { type = "jar" }
     }
     testImplementation(libs.pipeline.unit)
     testImplementation(platform(libs.junit.bom))
@@ -45,12 +46,11 @@ dependencies {
     codenarc(libs.codenarc)
 
     integrationTestImplementation(libs.groovy)
-    integrationTestImplementation(platform(libs.junit.bom))
     integrationTestImplementation(libs.junit.jupiter)
     integrationTestImplementation(platform(libs.jenkins.bom))
     integrationTestImplementation(libs.jenkins.core)
     integrationTestImplementation(libs.jenkins.test.harness)
-    integrationTestImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
+    integrationTestImplementation(libs.jakarta.servlet.api)
     integrationTestRuntimeOnly(libs.junit.launcher)
 
     jenkinsPlugins(platform(libs.jenkins.bom))
@@ -174,8 +174,9 @@ val extractJenkinsPluginJars = tasks.register<Sync>("extractJenkinsPluginJars") 
 sourceSets["integrationTest"].apply {
     val pluginJars = files(fileTree(jenkinsPluginJars) { include("*.jar") })
             .builtBy(extractJenkinsPluginJars)
-    compileClasspath += pluginJars
-    runtimeClasspath += pluginJars
+    val pluginLibraries = files(jenkinsPlugins.filter { it.extension == "jar" })
+    compileClasspath += pluginJars + pluginLibraries
+    runtimeClasspath += pluginJars + pluginLibraries
 }
 
 val integrationTest = tasks.register<Test>("integrationTest") {

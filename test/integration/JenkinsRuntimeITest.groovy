@@ -1,11 +1,12 @@
+import hudson.model.Job
 import java.nio.file.Files
 import java.nio.file.Path
 
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
-import org.jenkinsci.plugins.workflow.libs.GlobalLibraries
 import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration
+import org.jenkinsci.plugins.workflow.libs.LibraryResolver
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -34,7 +35,7 @@ class JenkinsRuntimeITest {
 
     @Test
     void runsLoggingFromASandboxedPipeline(final JenkinsRule jenkins) {
-        registerLibrary()
+        registerLibrary(jenkins)
         final WorkflowRun run = runPipeline(jenkins, 'logging', '''
                 @Library('jenkins-platform-library') _
 
@@ -46,7 +47,7 @@ class JenkinsRuntimeITest {
 
     @Test
     void checksOutWithTheRealGitPlugin(final JenkinsRule jenkins) {
-        registerLibrary()
+        registerLibrary(jenkins)
         final Path repository = createRepository()
         final String repositoryUrl = serveRepository(repository)
         final WorkflowRun run = runPipeline(jenkins, 'git-checkout', """
@@ -79,13 +80,30 @@ class JenkinsRuntimeITest {
         return run
     }
 
-    private static void registerLibrary() {
-        final File sourceRoot = new File(System.getProperty('jenkins.library.root'))
-        final LibraryConfiguration library = new LibraryConfiguration(
-                LIBRARY_NAME, new LocalLibraryRetriever(sourceRoot))
-        library.defaultVersion = 'working-tree'
-        library.implicit = false
-        GlobalLibraries.get().libraries = [library]
+    private static void registerLibrary(final JenkinsRule jenkins) {
+        jenkins.jenkins.getExtensionList(LibraryResolver).add(new WorkingTreeLibraryResolver())
+    }
+
+    static final class WorkingTreeLibraryResolver extends LibraryResolver {
+
+        @Override
+        boolean isTrusted() {
+            return true
+        }
+
+        @Override
+        Collection<LibraryConfiguration> forJob(final Job<?, ?> job,
+                                                final Map<String, String> libraryVersions) {
+            if (!libraryVersions.containsKey(LIBRARY_NAME)) {
+                return []
+            }
+            final File sourceRoot = new File(System.getProperty('jenkins.library.root'))
+            final LibraryConfiguration library = new LibraryConfiguration(
+                    LIBRARY_NAME, new LocalLibraryRetriever(sourceRoot))
+            library.defaultVersion = 'working-tree'
+            library.implicit = false
+            return [library]
+        }
     }
 
     private Path createRepository() {

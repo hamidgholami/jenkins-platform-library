@@ -1,16 +1,22 @@
 # Jenkins Platform Library
 
-A Jenkins Shared Library for practical, reusable CI/CD building blocks. It
+A Jenkins Shared Library that combines practical CI/CD building blocks with
+fast unit tests and focused execution inside an embedded Jenkins controller. It
 currently provides:
 
 - contextual Pipeline logging with levels and optional ANSI colors;
 - configurable Git checkout through Jenkins's Git plugin.
 
-The current scope is deliberately focused, while the structure is intended to
-support additional utilities and example pipelines when they solve concrete
-problems. The repository demonstrates a conventional shared-library layout,
-packaged Groovy classes, thin global variables, JenkinsPipelineUnit tests, and a
-consumer Jenkinsfile.
+Shared-library code can pass mock-based tests and still fail when Jenkins applies
+CPS transformation, sandbox rules, dynamic library loading, or real plugin
+binding. This project addresses that gap with two deliberate test layers:
+
+- JenkinsPipelineUnit tests provide fast feedback for behavior and edge cases;
+- Jenkins Test Harness runs representative library calls in a real Jenkins
+  runtime, including a sandboxed Pipeline and the actual Git plugin.
+
+The current scope is deliberately focused, while the structure can support
+additional utilities and example pipelines when they solve concrete problems.
 
 ## Usage
 
